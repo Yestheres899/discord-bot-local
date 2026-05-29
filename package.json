@@ -1,0 +1,15 @@
+{
+  "name": "discord-bot-local",
+  "version": "1.0.0",
+  "description": "Bot Discord com IA local via Ollama",
+  "type": "module",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "openai": "^4.0.0"
+  }
+}
