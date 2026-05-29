@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: discord-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: BOT_NAME
+        value: LocalIA
+      - key: SPONTANEOUS_CHANCE
+        value: "30"
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
