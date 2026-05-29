@@ -7,6 +7,7 @@ import * as path from "path";
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const BOT_NAME = process.env.BOT_NAME ?? "LocalIA";
 const SPONTANEOUS_CHANCE = parseInt(process.env.SPONTANEOUS_CHANCE ?? "30", 10);
+const REACTION_CHANCE = parseInt(process.env.REACTION_CHANCE ?? "40", 10);
 const MEMORY_FILE = path.join(process.cwd(), "memory.json");
 
 // Detecta qual backend de IA usar
@@ -95,6 +96,26 @@ async function think(trigger, context) {
   return text;
 }
 
+// Retorna um emoji para reagir, ou null se não quiser reagir
+async function pickReaction(content) {
+  const prompt = `Você é ${BOT_NAME}, membro de um servidor Discord. Alguém disse: "${content}"
+
+Escolha UMA reação de emoji que você daria nessa mensagem, como um membro real do servidor faria.
+Pode ser qualquer emoji unicode (ex: 😂, 👍, 🔥, 💀, 😭, 🤡, 👀, etc).
+Se a mensagem não merecer reação nenhuma, responda exatamente: [PASS]
+Responda APENAS com o emoji ou [PASS]. Nada mais.`;
+
+  const response = await ai.chat.completions.create({
+    model: AI_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 10,
+  });
+
+  const text = response.choices[0]?.message?.content?.trim() ?? "[PASS]";
+  if (text === "[PASS]" || text.includes("[PASS]") || text.length > 10) return null;
+  return text;
+}
+
 function splitMessage(text, maxLength = 1900) {
   if (text.length <= maxLength) return [text];
   const parts = [];
@@ -141,6 +162,13 @@ client.on(Events.MessageCreate, async (message) => {
   }
 
   if (message.author.bot) return;
+
+  // Reações automáticas (independente de responder ou não)
+  if (message.content.trim() && Math.random() * 100 < REACTION_CHANCE) {
+    pickReaction(message.content).then((emoji) => {
+      if (emoji) message.react(emoji).catch(() => {});
+    }).catch(() => {});
+  }
 
   const botId = client.user.id;
   const isMentioned = message.mentions.has(botId) && !message.mentions.everyone;
